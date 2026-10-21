@@ -1,0 +1,96 @@
+name: Portable ve macOS paketleri
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows-portable:
+    name: Windows x64 Portable
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: "x64"
+          cache: "pip"
+      - name: Bağımlılıkları kur
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Testleri çalıştır
+        run: python -m unittest discover -s tests -v
+      - name: Portable uygulamayı oluştur
+        run: pyinstaller --noconfirm --clean OtoparkPlakaKontrol.spec
+      - name: Tek dosya EXE oluştur
+        run: pyinstaller --noconfirm --clean --distpath dist-onefile --workpath build-onefile OtoparkPlakaKontrol-OneFile.spec
+      - name: Portable ZIP oluştur
+        shell: pwsh
+        run: |
+          Copy-Item portable.mode dist\OtoparkPlakaKontrol\portable.mode -Force
+          Copy-Item README.md dist\OtoparkPlakaKontrol\README.md -Force
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          Compress-Archive -Path dist\OtoparkPlakaKontrol -DestinationPath release\OtoparkPlakaKontrol-Windows-x64-Portable.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OtoparkPlakaKontrol-Windows-x64-Portable
+          path: release/OtoparkPlakaKontrol-Windows-x64-Portable.zip
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OtoparkPlakaKontrol-Windows-x64-EXE
+          path: dist-onefile/OtoparkPlakaKontrol-v2.1-Windows-x64.exe
+          if-no-files-found: error
+
+  macos:
+    name: macOS ${{ matrix.package_arch }} DMG
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            package_arch: arm64
+          - runner: macos-15-intel
+            package_arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Bağımlılıkları kur
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: APP ve DMG oluştur
+        env:
+          PACKAGE_ARCH: ${{ matrix.package_arch }}
+        run: bash scripts/build_macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OtoparkPlakaKontrol-macOS-${{ matrix.package_arch }}
+          path: release/OtoparkPlakaKontrol-macOS-${{ matrix.package_arch }}.dmg
+          if-no-files-found: error
+
+  github-release:
+    name: GitHub Release oluştur
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows-portable, macos]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: OtoparkPlakaKontrol-*
+          path: release-assets
+          merge-multiple: true
+      - name: Sürüm dosyalarını yayınla
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" release-assets/* --generate-notes --title "Otopark Plaka Kontrol ${GITHUB_REF_NAME}"

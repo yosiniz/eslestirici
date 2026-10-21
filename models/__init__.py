@@ -1,0 +1,1 @@
+"""Qt tablo modelleri."""
