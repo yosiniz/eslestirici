@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import traceback
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,7 @@ from services.matching_service import (
     MultiMatchResult,
     OutputMode,
 )
+from services.merge_service import MergeInput, MergeResult, MergeService
 
 
 class HeaderWorker(QObject):
@@ -208,6 +210,90 @@ class MultiExportWorker(QObject):
         try:
             destination = ExportService.export_multi(
                 self.result, self.output_path, progress=self._report
+            )
+            self.finished.emit(str(destination))
+        except Exception as exc:
+            self.failed.emit(str(exc), traceback.format_exc())
+
+
+class MergeMetadataWorker(QObject):
+    """Birden fazla kaynağın sheet listesini arayüzü kilitlemeden okur."""
+
+    progress = Signal(int, str)
+    finished = Signal(object)
+    failed = Signal(str, str)
+
+    def __init__(self, paths: list[str]) -> None:
+        super().__init__()
+        self.paths = paths
+
+    @Slot()
+    def run(self) -> None:
+        try:
+            items: list[tuple[str, list[str]]] = []
+            total = len(self.paths)
+            for index, path in enumerate(self.paths, 1):
+                self.progress.emit(
+                    int(100 * (index - 1) / max(total, 1)),
+                    f"Sheet bilgisi okunuyor: {Path(path).name}",
+                )
+                items.append((path, ExcelService.list_sheets(path)))
+            self.progress.emit(100, f"{len(items)} dosya eklendi.")
+            self.finished.emit(items)
+        except Exception as exc:
+            self.failed.emit(str(exc), traceback.format_exc())
+
+
+class MergeWorker(QObject):
+    progress = Signal(int, str)
+    finished = Signal(object)
+    failed = Signal(str, str)
+
+    def __init__(
+        self,
+        inputs: list[MergeInput],
+        align_mode: str,
+        add_source_columns: bool,
+    ) -> None:
+        super().__init__()
+        self.inputs = inputs
+        self.align_mode = align_mode
+        self.add_source_columns = add_source_columns
+
+    @Slot()
+    def run(self) -> None:
+        try:
+            result = MergeService.merge(
+                self.inputs,
+                self.align_mode,
+                self.add_source_columns,
+                progress=lambda value, message: self.progress.emit(value, message),
+            )
+            self.finished.emit(result)
+        except Exception as exc:
+            self.failed.emit(str(exc), traceback.format_exc())
+
+
+class MergeExportWorker(QObject):
+    progress = Signal(int, str)
+    finished = Signal(str)
+    failed = Signal(str, str)
+
+    def __init__(self, result: MergeResult, output_path: str) -> None:
+        super().__init__()
+        self.result = result
+        self.output_path = output_path
+
+    @Slot()
+    def run(self) -> None:
+        try:
+            destination = ExportService.export_dataframe(
+                self.result.dataframe,
+                self.output_path,
+                sheet_title="Birleştirilmiş Veriler",
+                summary_rows=self.result.summary_rows(),
+                summary_title="Birleştirme Özeti",
+                progress=lambda value, message: self.progress.emit(value, message),
             )
             self.finished.emit(str(destination))
         except Exception as exc:

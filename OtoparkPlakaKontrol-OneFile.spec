@@ -33,7 +33,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='OtoparkPlakaKontrol-v2.1-Windows-x64',
+    name='Eslestirici-v2.2-Windows-x64',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

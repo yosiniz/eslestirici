@@ -33,6 +33,60 @@ class ExportService:
     MAX_EXCEL_ROWS = 1_048_576
 
     @classmethod
+    def export_dataframe(
+        cls,
+        dataframe: pd.DataFrame,
+        output_path: str | Path,
+        sheet_title: str = "Sonuçlar",
+        summary_rows: list[tuple[str, object]] | None = None,
+        summary_title: str = "Özet",
+        progress: Callable[[int, str], None] | None = None,
+    ) -> Path:
+        """Tek bir DataFrame'i isteğe bağlı özet sayfasıyla biçimli XLSX'e yazar."""
+        destination = Path(output_path)
+        if destination.suffix.lower() != ".xlsx":
+            destination = destination.with_suffix(".xlsx")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        workbook = Workbook(write_only=True)
+        try:
+            if summary_rows is not None:
+                sheet = workbook.create_sheet(title=summary_title[:31])
+                sheet.freeze_panes = "A2"
+                sheet.append(
+                    [cls._header_cell(sheet, "Bilgi"), cls._header_cell(sheet, "Değer")]
+                )
+                for label, value in summary_rows:
+                    sheet.append(
+                        [cls._value_cell(sheet, label), cls._value_cell(sheet, value)]
+                    )
+                sheet.column_dimensions["A"].width = 34
+                sheet.column_dimensions["B"].width = 70
+            cls._append_dataframe_sheet(
+                workbook,
+                sheet_title[:31],
+                dataframe,
+                progress,
+                5,
+                90,
+            )
+            if progress:
+                progress(94, "Excel diske yazılıyor...")
+            workbook.save(destination)
+        except PermissionError as exc:
+            raise ExportServiceError(
+                "Çıktı dosyasına yazılamadı. Dosya Excel'de açık olabilir."
+            ) from exc
+        except ExportServiceError:
+            raise
+        except Exception as exc:
+            raise ExportServiceError(f"Excel oluşturulurken hata oluştu: {exc}") from exc
+        finally:
+            workbook.close()
+        if progress:
+            progress(100, "Excel başarıyla oluşturuldu.")
+        return destination
+
+    @classmethod
     def export_multi(
         cls,
         result: MultiMatchResult,

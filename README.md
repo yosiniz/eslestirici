@@ -18,6 +18,9 @@ Windows ve macOS üzerinde iki Excel/CSV dosyasını kullanıcı tanımlı tek v
 - Kural şablonlarını kaydetme, yükleme ve silme
 - `.xlsx`, `.xlsm`, `.xls` ve `.csv` kaynak desteği
 - Her iki Excel dosyası için bağımsız çalışma sayfası (sheet) seçimi
+- İstenilen sayıda Excel/CSV dosyasını seçilen sheet'lerden alt alta birleştirme
+- Birleştirmede kolon adlarına göre otomatik hizalama ve eksik kolonları boş bırakma
+- Birleşik sonuca isteğe bağlı kaynak dosya, kaynak sheet ve kaynak satır bilgisi ekleme
 - QThread tabanlı okuma, karşılaştırma, arama ve dışa aktarma
 - Biçimlendirilmiş, denetlenebilir beş sayfalı `.xlsx` çıktısı
 - Windows ve macOS'ta kullanılan özgün yeşil **Y** uygulama simgesi
@@ -47,6 +50,20 @@ Her dışa aktarmada şu sayfalar üretilir:
 
 Orijinal sütunlar ve değerler korunur. Eşleşen/kısmi kayıtlarda iki dosyanın satırları yan yana, kaynak Excel satır numaralarıyla yer alır. Başlıklar biçimlendirilir, ilk satır dondurulur ve AutoFilter eklenir.
 
+## Birden fazla Excel'i alt alta birleştirme
+
+Ana ekrandaki **Excel Dosyalarını Birleştir** düğmesine basın:
+
+1. **+ Excel/CSV Ekle** ile iki veya daha fazla dosya seçin.
+2. Her dosyanın yanındaki **Sheet** listesinden birleştirilecek çalışma sayfasını belirleyin. Aynı Excel dosyasını yeniden ekleyerek farklı sheet'leri de birleştirebilirsiniz.
+3. Dosyaları **Yukarı/Aşağı** düğmeleriyle istediğiniz sıraya getirin.
+4. Varsayılan **Kolon adlarına göre hizala** seçeneği, aynı adlı kolonları üst üste getirir; bir dosyada bulunmayan kolonları boş bırakır ve sonradan karşılaşılan yeni kolonları sonuca ekler.
+5. İsterseniz bütün dosyalarda aynı kolon sırasını ve adlarını zorunlu tutan katı modu seçin.
+6. **Dosyaları Birleştir** ile sonucu önizleyin, arayın ve sıralayın.
+7. **Birleşik Exceli Kaydet** ile yeni bir `.xlsx` oluşturun.
+
+Çıktıda `Birleştirilmiş Veriler` ve `Birleştirme Özeti` sayfaları bulunur. Kaynak dosyalar değiştirilmez. Kaynak bilgi kolonları açıksa her satırın geldiği dosya, sheet ve özgün Excel satır numarası sonuçta yer alır.
+
 ## Proje yapısı
 
 ```text
@@ -61,11 +78,13 @@ OtoparkPlakaKontrol-macOS.spec
 models/paged_dataframe_model.py
 services/
   excel_service.py
+  merge_service.py
   matching_service.py
   export_service.py
   template_service.py
 ui/
   main_window.py
+  merge_dialog.py
   matching_rules_widget.py
   result_table.py
   styles.py
@@ -106,7 +125,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 python -m unittest discover -s tests -v
 ```
 
-Testler tek/çok kural, AND/OR, para/plaka/tarih normalizasyonu, boş değerler, bire bir tekrar tüketimi, tüm eşleşmeler, şablonlar ve beş sayfalı Excel çıktısını kapsar.
+Testler tek/çok kural, AND/OR, para/plaka/tarih normalizasyonu, boş değerler, bire bir tekrar tüketimi, tüm eşleşmeler, şablonlar, çoklu Excel birleştirme ve biçimlendirilmiş Excel çıktılarını kapsar.
 
 ## Windows EXE oluşturma
 
@@ -135,7 +154,7 @@ Tek dosya seçeneği (açılışı daha yavaştır):
 pyinstaller --noconfirm --clean OtoparkPlakaKontrol-OneFile.spec
 ```
 
-Tek dosyalı çıktı `dist\OtoparkPlakaKontrol-v2.1-Windows-x64.exe` konumunda oluşur. GitHub Releases için bu EXE doğrudan kullanılabilir; ilk açılışı portable klasör sürümünden daha yavaştır.
+Tek dosyalı çıktı `dist\Eslestirici-v2.2-Windows-x64.exe` konumunda oluşur. GitHub Releases için bu EXE doğrudan kullanılabilir; ilk açılışı portable klasör sürümünden daha yavaştır.
 
 ### Windows portable ZIP
 

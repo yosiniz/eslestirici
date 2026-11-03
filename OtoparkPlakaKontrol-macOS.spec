@@ -49,11 +49,11 @@ app = BUNDLE(
     name='Otopark Plaka Kontrol.app',
     icon='assets/app_icon.icns',
     bundle_identifier='tr.local.otoparkplakakontrol',
-    version='2.1.0',
+    version='2.2.0',
     info_plist={
         'CFBundleDisplayName': 'Otopark Plaka Kontrol',
         'CFBundleName': 'Otopark Plaka Kontrol',
-        'CFBundleShortVersionString': '2.1.0',
+        'CFBundleShortVersionString': '2.2.0',
         'NSHighResolutionCapable': True,
         'NSHumanReadableCopyright': 'Yerel veri karşılaştırma uygulaması',
     },

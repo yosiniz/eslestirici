@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 from services.matching_service import MultiMatchResult
 from services.template_service import TemplateService
 from ui.matching_rules_widget import MatchingRulesWidget
+from ui.merge_dialog import MergeDialog
 from ui.result_table import ResultTable
 from ui.styles import APP_STYLESHEET
 from workers.process_worker import HeaderWorker, MultiExportWorker, MultiProcessWorker
@@ -52,8 +53,9 @@ class MainWindow(QMainWindow):
         self._process_worker: MultiProcessWorker | None = None
         self._export_thread: QThread | None = None
         self._export_worker: MultiExportWorker | None = None
+        self._merge_dialog: MergeDialog | None = None
 
-        self.setWindowTitle("Otopark Plaka Karşılaştırma Sistemi — Çoklu Sütun")
+        self.setWindowTitle("Eşleştirici — Excel Karşılaştırma ve Birleştirme")
         self.resize(1480, 920)
         self.setMinimumSize(1100, 720)
         self.setStyleSheet(APP_STYLESHEET)
@@ -66,10 +68,10 @@ class MainWindow(QMainWindow):
         central = QWidget()
         root = QVBoxLayout(central)
         root.setContentsMargins(18, 14, 18, 10)
-        title = QLabel("Otopark Plaka Karşılaştırma Sistemi")
+        title = QLabel("Eşleştirici")
         title.setObjectName("titleLabel")
         subtitle = QLabel(
-            "Excel/CSV dosyalarını tek veya çok sayıda sütunla, bire bir kayıt güvenliğiyle karşılaştırın."
+            "Excel/CSV dosyalarını çoklu sütunla karşılaştırın veya birden fazla dosyayı alt alta birleştirin."
         )
         subtitle.setObjectName("subtitleLabel")
         root.addWidget(title)
@@ -123,10 +125,12 @@ class MainWindow(QMainWindow):
         self.clear_button = QPushButton("Temizle")
         self.export_button = QPushButton("Excel Olarak Kaydet")
         self.export_button.setObjectName("successButton")
+        self.merge_files_button = QPushButton("Excel Dosyalarını Birleştir")
         self.exit_button = QPushButton("Çıkış")
         action.addWidget(self.compare_button)
         action.addWidget(self.clear_button)
         action.addStretch()
+        action.addWidget(self.merge_files_button)
         action.addWidget(self.export_button)
         action.addWidget(self.exit_button)
         layout.addLayout(action)
@@ -174,6 +178,7 @@ class MainWindow(QMainWindow):
         )
         self.compare_button.clicked.connect(self._start_comparison)
         self.export_button.clicked.connect(self._start_export)
+        self.merge_files_button.clicked.connect(self._open_merge_dialog)
         self.clear_button.clicked.connect(self._clear)
         self.exit_button.clicked.connect(self.close)
         self.rules.changed.connect(self._rules_changed)
@@ -340,6 +345,12 @@ class MainWindow(QMainWindow):
         self.progress.setValue(100)
         QMessageBox.information(self, "Dışa Aktarma Tamamlandı", f"Excel oluşturuldu:\n{path}")
 
+    def _open_merge_dialog(self) -> None:
+        dialog = MergeDialog(self)
+        self._merge_dialog = dialog
+        dialog.finished.connect(lambda _: setattr(self, "_merge_dialog", None))
+        dialog.open()
+
     def _operation_failed(self, message: str, details: str) -> None:
         self._set_busy(False)
         self.progress.setValue(0)
@@ -469,6 +480,7 @@ class MainWindow(QMainWindow):
         self.compare_button.setEnabled(not self._busy and ready)
         self.export_button.setEnabled(not self._busy and self.result is not None)
         self.clear_button.setEnabled(not self._busy)
+        self.merge_files_button.setEnabled(not self._busy)
 
     @staticmethod
     def _path_label(text: str) -> QLabel:

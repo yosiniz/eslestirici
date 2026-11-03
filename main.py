@@ -1,4 +1,4 @@
-"""Otopark Plaka Karşılaştırma Sistemi uygulama giriş noktası."""
+"""Eşleştirici uygulama giriş noktası."""
 
 from __future__ import annotations
 
@@ -18,9 +18,9 @@ def main() -> int:
     multiprocessing.freeze_support()
 
     app = QApplication(sys.argv)
-    app.setApplicationName("Otopark Plaka Karşılaştırma Sistemi")
-    app.setApplicationVersion("2.1.0")
-    app.setOrganizationName("Otopark Plaka Kontrol")
+    app.setApplicationName("Eşleştirici")
+    app.setApplicationVersion("2.2.0")
+    app.setOrganizationName("Eşleştirici")
     app.setStyle("Fusion")
     app.setFont(QFont("Segoe UI", 10))
     app.setAttribute(Qt.ApplicationAttribute.AA_DontShowIconsInMenus, False)
