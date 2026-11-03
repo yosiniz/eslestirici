@@ -11,6 +11,11 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from services.excel_service import ExcelService
 from services.export_service import ExportService
+from services.data_operation_service import (
+    DataOperationService,
+    FilterCondition,
+    OperationResult,
+)
 from services.matching_service import (
     MatchResult,
     MatchingService,
@@ -293,6 +298,134 @@ class MergeExportWorker(QObject):
                 sheet_title="Birleştirilmiş Veriler",
                 summary_rows=self.result.summary_rows(),
                 summary_title="Birleştirme Özeti",
+                progress=lambda value, message: self.progress.emit(value, message),
+            )
+            self.finished.emit(str(destination))
+        except Exception as exc:
+            self.failed.emit(str(exc), traceback.format_exc())
+
+
+class DataToolsLoadWorker(QObject):
+    progress = Signal(int, str)
+    finished = Signal(str, str, object, object, object)
+    failed = Signal(str, str)
+
+    def __init__(self, path: str, sheet_name: str | None = None) -> None:
+        super().__init__()
+        self.path = path
+        self.sheet_name = sheet_name
+
+    @Slot()
+    def run(self) -> None:
+        try:
+            self.progress.emit(5, "Sheet listesi okunuyor...")
+            sheets = ExcelService.list_sheets(self.path)
+            selected = self.sheet_name or sheets[0]
+            self.progress.emit(20, f"{Path(self.path).name} okunuyor...")
+            dataframe = ExcelService.read_dataframe(
+                self.path,
+                sheet_name=selected,
+            )
+            columns = [str(column).strip() for column in dataframe.columns]
+            if len(columns) != len(set(columns)):
+                raise ValueError(
+                    "Başlıklar temizlendikten sonra aynı isimde birden fazla sütun bulundu."
+                )
+            dataframe.columns = columns
+            self.progress.emit(100, f"{len(dataframe):,} kayıt yüklendi.")
+            self.finished.emit(self.path, str(selected), sheets, columns, dataframe)
+        except Exception as exc:
+            self.failed.emit(str(exc), traceback.format_exc())
+
+
+class DataOperationWorker(QObject):
+    progress = Signal(int, str)
+    finished = Signal(object)
+    failed = Signal(str, str)
+
+    def __init__(self, dataframe: pd.DataFrame, operation: str, options: dict) -> None:
+        super().__init__()
+        self.dataframe = dataframe
+        self.operation = operation
+        self.options = options
+
+    @Slot()
+    def run(self) -> None:
+        try:
+            self.progress.emit(10, "Veri işleniyor...")
+            service = DataOperationService
+            if self.operation == "filter":
+                result = service.filter(
+                    self.dataframe,
+                    self.options["conditions"],
+                    self.options["logic"],
+                )
+            elif self.operation == "aggregate":
+                result = service.aggregate(
+                    self.dataframe,
+                    self.options["column"],
+                    self.options["function"],
+                )
+            elif self.operation == "sort":
+                result = service.sort(
+                    self.dataframe,
+                    self.options["column"],
+                    self.options["ascending"],
+                )
+            elif self.operation == "drop_missing":
+                result = service.drop_missing(
+                    self.dataframe, self.options["column"]
+                )
+            elif self.operation == "fill_missing":
+                result = service.fill_missing(
+                    self.dataframe,
+                    self.options["column"],
+                    self.options["value"],
+                )
+            elif self.operation == "remove_duplicates":
+                result = service.remove_duplicates(
+                    self.dataframe,
+                    self.options.get("columns"),
+                    self.options.get("keep", "first"),
+                )
+            elif self.operation == "transform_text":
+                result = service.transform_text(
+                    self.dataframe,
+                    self.options["column"],
+                    self.options["text_operation"],
+                )
+            elif self.operation == "calculated_column":
+                result = service.calculated_column(self.dataframe, **self.options)
+            else:
+                raise ValueError("Bilinmeyen veri işlemi.")
+            self.progress.emit(100, result.message)
+            self.finished.emit(result)
+        except Exception as exc:
+            self.failed.emit(str(exc), traceback.format_exc())
+
+
+class DataToolsExportWorker(QObject):
+    progress = Signal(int, str)
+    finished = Signal(str)
+    failed = Signal(str, str)
+
+    def __init__(self, dataframe: pd.DataFrame, output_path: str) -> None:
+        super().__init__()
+        self.dataframe = dataframe
+        self.output_path = output_path
+
+    @Slot()
+    def run(self) -> None:
+        try:
+            destination = ExportService.export_dataframe(
+                self.dataframe,
+                self.output_path,
+                sheet_title="İşlenmiş Veriler",
+                summary_rows=[
+                    ("Kayıt sayısı", len(self.dataframe)),
+                    ("Sütun sayısı", len(self.dataframe.columns)),
+                ],
+                summary_title="İşlem Özeti",
                 progress=lambda value, message: self.progress.emit(value, message),
             )
             self.finished.emit(str(destination))

@@ -19,7 +19,7 @@ def main() -> int:
 
     app = QApplication(sys.argv)
     app.setApplicationName("Eşleştirici")
-    app.setApplicationVersion("2.2.0")
+    app.setApplicationVersion("2.3.0")
     app.setOrganizationName("Eşleştirici")
     app.setStyle("Fusion")
     app.setFont(QFont("Segoe UI", 10))

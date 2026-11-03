@@ -30,6 +30,7 @@ from services.matching_service import MultiMatchResult
 from services.template_service import TemplateService
 from ui.matching_rules_widget import MatchingRulesWidget
 from ui.merge_dialog import MergeDialog
+from ui.data_tools_dialog import DataToolsDialog
 from ui.result_table import ResultTable
 from ui.styles import APP_STYLESHEET
 from workers.process_worker import HeaderWorker, MultiExportWorker, MultiProcessWorker
@@ -54,6 +55,7 @@ class MainWindow(QMainWindow):
         self._export_thread: QThread | None = None
         self._export_worker: MultiExportWorker | None = None
         self._merge_dialog: MergeDialog | None = None
+        self._data_tools_dialog: DataToolsDialog | None = None
 
         self.setWindowTitle("Eşleştirici — Excel Karşılaştırma ve Birleştirme")
         self.resize(1480, 920)
@@ -126,10 +128,12 @@ class MainWindow(QMainWindow):
         self.export_button = QPushButton("Excel Olarak Kaydet")
         self.export_button.setObjectName("successButton")
         self.merge_files_button = QPushButton("Excel Dosyalarını Birleştir")
+        self.data_tools_button = QPushButton("Excel İşlemleri ve Filtreler")
         self.exit_button = QPushButton("Çıkış")
         action.addWidget(self.compare_button)
         action.addWidget(self.clear_button)
         action.addStretch()
+        action.addWidget(self.data_tools_button)
         action.addWidget(self.merge_files_button)
         action.addWidget(self.export_button)
         action.addWidget(self.exit_button)
@@ -179,6 +183,7 @@ class MainWindow(QMainWindow):
         self.compare_button.clicked.connect(self._start_comparison)
         self.export_button.clicked.connect(self._start_export)
         self.merge_files_button.clicked.connect(self._open_merge_dialog)
+        self.data_tools_button.clicked.connect(self._open_data_tools_dialog)
         self.clear_button.clicked.connect(self._clear)
         self.exit_button.clicked.connect(self.close)
         self.rules.changed.connect(self._rules_changed)
@@ -351,6 +356,12 @@ class MainWindow(QMainWindow):
         dialog.finished.connect(lambda _: setattr(self, "_merge_dialog", None))
         dialog.open()
 
+    def _open_data_tools_dialog(self) -> None:
+        dialog = DataToolsDialog(self)
+        self._data_tools_dialog = dialog
+        dialog.finished.connect(lambda _: setattr(self, "_data_tools_dialog", None))
+        dialog.open()
+
     def _operation_failed(self, message: str, details: str) -> None:
         self._set_busy(False)
         self.progress.setValue(0)
@@ -481,6 +492,7 @@ class MainWindow(QMainWindow):
         self.export_button.setEnabled(not self._busy and self.result is not None)
         self.clear_button.setEnabled(not self._busy)
         self.merge_files_button.setEnabled(not self._busy)
+        self.data_tools_button.setEnabled(not self._busy)
 
     @staticmethod
     def _path_label(text: str) -> QLabel:

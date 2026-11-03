@@ -21,6 +21,11 @@ Windows ve macOS üzerinde iki Excel/CSV dosyasını kullanıcı tanımlı tek v
 - İstenilen sayıda Excel/CSV dosyasını seçilen sheet'lerden alt alta birleştirme
 - Birleştirmede kolon adlarına göre otomatik hizalama ve eksik kolonları boş bırakma
 - Birleşik sonuca isteğe bağlı kaynak dosya, kaynak sheet ve kaynak satır bilgisi ekleme
+- Boş/boş olmayan, eşit/eşit değil, karşılaştırma, aralık ve metin filtreleri
+- Birden fazla filtreyi VE veya VEYA mantığıyla uygulama
+- Toplam, ortalama, medyan, min, max, adet, benzersiz adet, standart sapma ve varyans
+- Sıralama, boş doldurma/silme, tekrar kaldırma ve metin biçimlendirme
+- Toplama, çıkarma, çarpma, bölme, yüzde, yüzde değişim ve metin birleştirme ile yeni sütun oluşturma
 - QThread tabanlı okuma, karşılaştırma, arama ve dışa aktarma
 - Biçimlendirilmiş, denetlenebilir beş sayfalı `.xlsx` çıktısı
 - Windows ve macOS'ta kullanılan özgün yeşil **Y** uygulama simgesi
@@ -64,6 +69,21 @@ Ana ekrandaki **Excel Dosyalarını Birleştir** düğmesine basın:
 
 Çıktıda `Birleştirilmiş Veriler` ve `Birleştirme Özeti` sayfaları bulunur. Kaynak dosyalar değiştirilmez. Kaynak bilgi kolonları açıksa her satırın geldiği dosya, sheet ve özgün Excel satır numarası sonuçta yer alır.
 
+## Excel işlemleri ve filtreler
+
+Ana ekrandaki **Excel İşlemleri ve Filtreler** düğmesiyle çalışma kopyası üzerinde şu işlemler yapılabilir:
+
+- **Filtreleme:** boş olan, boş olmayan, eşit, eşit değil, büyük/küçük, büyük/küçük veya eşit, iki değer arasında, içerir, içermez, ile başlar, ile biter ve listede bulunan.
+- **Çoklu filtre:** kuralları VE veya VEYA mantığıyla birlikte uygulama.
+- **Özet hesaplama:** toplam, ortalama, medyan, minimum, maksimum, dolu adet, benzersiz adet, standart sapma ve varyans.
+- **Sıralama:** sayı, tarih veya metin kolonunu artan/azalan sıralama.
+- **Boş değer:** seçilen kolondaki boş satırları kaldırma veya kullanıcı değerleriyle doldurma.
+- **Tekrarlar:** tamamen aynı satırları ya da seçilen kolona göre tekrarları kaldırma; ilk veya son kaydı saklama.
+- **Metin:** trim, büyük harf, küçük harf ve başlık biçimi.
+- **Yeni sütun:** iki sütun veya bir sabit kullanarak toplama, çıkarma, çarpma, bölme, yüzde ve yüzde değişim; iki metin kolonunu birleştirme.
+
+İşlemler sırayla mevcut sonuç üzerine uygulanır. **Orijinal Veriye Dön** düğmesi yüklenen çalışma kopyasını sıfırlar. **İşlenmiş Exceli Kaydet** her zaman yeni bir `.xlsx` oluşturur; kaynak dosyanın üzerine yazılmaz.
+
 ## Proje yapısı
 
 ```text
@@ -77,12 +97,14 @@ OtoparkPlakaKontrol-OneFile.spec
 OtoparkPlakaKontrol-macOS.spec
 models/paged_dataframe_model.py
 services/
+  data_operation_service.py
   excel_service.py
   merge_service.py
   matching_service.py
   export_service.py
   template_service.py
 ui/
+  data_tools_dialog.py
   main_window.py
   merge_dialog.py
   matching_rules_widget.py
@@ -154,7 +176,7 @@ Tek dosya seçeneği (açılışı daha yavaştır):
 pyinstaller --noconfirm --clean OtoparkPlakaKontrol-OneFile.spec
 ```
 
-Tek dosyalı çıktı `dist\Eslestirici-v2.2-Windows-x64.exe` konumunda oluşur. GitHub Releases için bu EXE doğrudan kullanılabilir; ilk açılışı portable klasör sürümünden daha yavaştır.
+Tek dosyalı çıktı `dist\Eslestirici-v2.3-Windows-x64.exe` konumunda oluşur. GitHub Releases için bu EXE doğrudan kullanılabilir; ilk açılışı portable klasör sürümünden daha yavaştır.
 
 ### Windows portable ZIP
 
