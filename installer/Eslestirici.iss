@@ -1,5 +1,5 @@
 #define MyAppName "Eşleştirici"
-#define MyAppVersion "2.3.1"
+#define MyAppVersion "2.4.0"
 #define MyAppPublisher "Eşleştirici"
 #define MyAppExeName "Eslestirici.exe"
 
@@ -23,7 +23,7 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 CloseApplications=yes
-RestartApplications=no
+RestartApplications=yes
 ChangesAssociations=no
 VersionInfoVersion={#MyAppVersion}.0
 VersionInfoCompany={#MyAppPublisher}
@@ -46,3 +46,7 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDi
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{#MyAppName} uygulamasını başlat"; Flags: nowait postinstall skipifsilent
+
+[UninstallDelete]
+Type: files; Name: "{app}\Eslestirici-v*-Setup-Windows-x64.exe"
+Type: filesandordirs; Name: "{app}\updates"

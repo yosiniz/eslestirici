@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QApplication
 
 from ui.main_window import MainWindow
 from utils.runtime_paths import bundled_resource
+from utils.version import APP_VERSION
 
 
 def main() -> int:
@@ -19,7 +20,7 @@ def main() -> int:
 
     app = QApplication(sys.argv)
     app.setApplicationName("Eşleştirici")
-    app.setApplicationVersion("2.3.1")
+    app.setApplicationVersion(APP_VERSION)
     app.setOrganizationName("Eşleştirici")
     app.setStyle("Fusion")
     app.setFont(QFont("Segoe UI", 10))

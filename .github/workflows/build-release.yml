@@ -52,12 +52,12 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: OtoparkPlakaKontrol-Windows-x64-EXE
-          path: dist-onefile/Eslestirici-v2.3.1-Windows-x64.exe
+          path: dist-onefile/Eslestirici-v2.4.0-Windows-x64.exe
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: OtoparkPlakaKontrol-Windows-x64-Setup
-          path: release/Eslestirici-v2.3.1-Setup-Windows-x64.exe
+          path: release/Eslestirici-v2.4.0-Setup-Windows-x64.exe
           if-no-files-found: error
 
   macos:

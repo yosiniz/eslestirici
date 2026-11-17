@@ -14,6 +14,21 @@ QLabel#subtitleLabel {
     color: #64748B;
     font-size: 11px;
 }
+QFrame#updateBanner {
+    background-color: #FFF7D6;
+    border: 1px solid #E6B94A;
+    border-radius: 8px;
+}
+QLabel#updateLabel {
+    color: #704E00;
+    font-weight: 700;
+}
+QPushButton#updateButton {
+    background-color: #D97706;
+    color: #FFFFFF;
+    border-color: #B45309;
+}
+QPushButton#updateButton:hover { background-color: #B45309; }
 QFrame#card, QGroupBox {
     background-color: #FFFFFF;
     border: 1px solid #DCE3EC;

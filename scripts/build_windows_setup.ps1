@@ -11,7 +11,7 @@ $pyinstaller = if ($PyInstallerPath) { $PyInstallerPath } else { Join-Path $proj
 $installerDist = Join-Path $projectRoot "dist-installer"
 $installerBuild = Join-Path $projectRoot "build-installer"
 $issFile = Join-Path $projectRoot "installer\Eslestirici.iss"
-$setupPath = Join-Path $projectRoot "release\Eslestirici-v2.3.1-Setup-Windows-x64.exe"
+$setupPath = Join-Path $projectRoot "release\Eslestirici-v2.4.0-Setup-Windows-x64.exe"
 $isccCandidates = @(
     (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"),
     (Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe"),

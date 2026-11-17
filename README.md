@@ -1,4 +1,4 @@
-# Otopark Plaka Karşılaştırma Sistemi
+# Eşleştirici
 
 Windows ve macOS üzerinde iki Excel/CSV dosyasını kullanıcı tanımlı tek veya çoklu sütun kurallarıyla karşılaştıran PySide6 uygulamasıdır. Kaynak dosyalar salt okunur açılır; uygulamada stok/kapasite/eşzamanlı araç limiti mantığı yoktur.
 
@@ -29,6 +29,7 @@ Windows ve macOS üzerinde iki Excel/CSV dosyasını kullanıcı tanımlı tek v
 - QThread tabanlı okuma, karşılaştırma, arama ve dışa aktarma
 - Biçimlendirilmiş, denetlenebilir beş sayfalı `.xlsx` çıktısı
 - Windows ve macOS'ta kullanılan özgün yeşil **Y** uygulama simgesi
+- Windows'ta uygulama klasöründeki daha yeni Setup EXE'yi algılayan çevrimdışı güncelleme düğmesi
 
 ## Kullanım
 
@@ -176,7 +177,7 @@ Tek dosya seçeneği (açılışı daha yavaştır):
 pyinstaller --noconfirm --clean OtoparkPlakaKontrol-OneFile.spec
 ```
 
-Tek dosyalı çıktı `dist\Eslestirici-v2.3.1-Windows-x64.exe` konumunda oluşur. GitHub Releases için bu EXE doğrudan kullanılabilir; ilk açılışı portable klasör sürümünden daha yavaştır.
+Tek dosyalı çıktı `dist\Eslestirici-v2.4.0-Windows-x64.exe` konumunda oluşur. GitHub Releases için bu EXE doğrudan kullanılabilir; ilk açılışı portable klasör sürümünden daha yavaştır.
 
 ### Windows Setup EXE
 
@@ -191,10 +192,22 @@ Kurulum sihirbazı uygulamayı kullanıcı hesabının uygulamalar klasörüne k
 Oluşan kurulum dosyası:
 
 ```text
-release\Eslestirici-v2.3.1-Setup-Windows-x64.exe
+release\Eslestirici-v2.4.0-Setup-Windows-x64.exe
 ```
 
 Kurulu sürümün ayarları ve eşleştirme şablonları `%APPDATA%\OtoparkPlakaKontrol` altında saklanır. Güncelleme kurulumu mevcut kullanıcı ayarlarını silmez.
+
+### Yerel ve çevrimdışı sürüm güncelleme
+
+Uygulama açılırken kurulu olduğu klasörü ve bu klasördeki `updates` alt klasörünü otomatik tarar. Mevcut sürümden daha yeni bir kurulum dosyası bulunduğunda üst bölümde **Yeni sürüm hazır** bildirimi ve **Güncelle** düğmesi görünür.
+
+Dosya adı aşağıdaki yapıda olmalıdır:
+
+```text
+Eslestirici-v2.4.1-Setup-Windows-x64.exe
+```
+
+Setup EXE'yi `Eslestirici.exe` ile aynı klasöre veya `updates` klasörüne kopyalayın. **Güncelle** düğmesi paketi sessizce çalıştırır, açık uygulamayı kapatır ve kurulum tamamlandığında yeniden başlatır. Kontrol tamamen yereldir; internet bağlantısı veya harici API kullanılmaz. Yalnızca mevcut sürümden daha yüksek, beklenen dosya adına sahip paketler kabul edilir.
 
 ### Windows portable ZIP
 

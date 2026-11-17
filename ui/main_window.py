@@ -5,10 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QThread, Qt
+from PySide6.QtCore import QThread, QTimer, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QComboBox,
+    QApplication,
     QFileDialog,
     QFrame,
     QGridLayout,
@@ -28,12 +29,14 @@ from PySide6.QtWidgets import (
 
 from services.matching_service import MultiMatchResult
 from services.template_service import TemplateService
+from services.update_service import UpdateInfo, UpdateService
 from ui.matching_rules_widget import MatchingRulesWidget
 from ui.merge_dialog import MergeDialog
 from ui.data_tools_dialog import DataToolsDialog
 from ui.result_table import ResultTable
 from ui.styles import APP_STYLESHEET
 from workers.process_worker import HeaderWorker, MultiExportWorker, MultiProcessWorker
+from utils.version import APP_VERSION
 
 
 class MainWindow(QMainWindow):
@@ -47,6 +50,8 @@ class MainWindow(QMainWindow):
         self.right_columns: list[str] = []
         self.result: MultiMatchResult | None = None
         self.templates = TemplateService()
+        self.update_service = UpdateService(APP_VERSION)
+        self.available_update: UpdateInfo | None = None
         self._busy = False
         self._header_threads: dict[str, QThread] = {}
         self._header_workers: dict[str, HeaderWorker] = {}
@@ -65,6 +70,11 @@ class MainWindow(QMainWindow):
         self._connect()
         self._refresh_templates()
         self._update_actions()
+        self._update_timer = QTimer(self)
+        self._update_timer.setInterval(30_000)
+        self._update_timer.timeout.connect(self._check_for_update)
+        self._update_timer.start()
+        QTimer.singleShot(0, self._check_for_update)
 
     def _build_ui(self) -> None:
         central = QWidget()
@@ -78,6 +88,18 @@ class MainWindow(QMainWindow):
         subtitle.setObjectName("subtitleLabel")
         root.addWidget(title)
         root.addWidget(subtitle)
+        self.update_banner = QFrame()
+        self.update_banner.setObjectName("updateBanner")
+        update_layout = QHBoxLayout(self.update_banner)
+        update_layout.setContentsMargins(12, 8, 10, 8)
+        self.update_label = QLabel()
+        self.update_label.setObjectName("updateLabel")
+        self.update_button = QPushButton("Güncelle")
+        self.update_button.setObjectName("updateButton")
+        update_layout.addWidget(self.update_label, 1)
+        update_layout.addWidget(self.update_button)
+        self.update_banner.hide()
+        root.addWidget(self.update_banner)
         splitter = QSplitter(Qt.Orientation.Vertical)
         splitter.setChildrenCollapsible(False)
         splitter.addWidget(self._controls())
@@ -186,6 +208,7 @@ class MainWindow(QMainWindow):
         self.data_tools_button.clicked.connect(self._open_data_tools_dialog)
         self.clear_button.clicked.connect(self._clear)
         self.exit_button.clicked.connect(self.close)
+        self.update_button.clicked.connect(self._start_update)
         self.rules.changed.connect(self._rules_changed)
         self.rules.save_template_requested.connect(self._save_template)
         self.rules.load_template_requested.connect(self._load_template)
@@ -362,6 +385,50 @@ class MainWindow(QMainWindow):
         dialog.finished.connect(lambda _: setattr(self, "_data_tools_dialog", None))
         dialog.open()
 
+    def _check_for_update(self) -> None:
+        try:
+            update = self.update_service.find_available_update()
+        except OSError:
+            update = None
+        self.available_update = update
+        if update is None:
+            self.update_banner.hide()
+            return
+        self.update_label.setText(
+            f"Yeni sürüm hazır: {update.version}  •  Mevcut sürüm: {APP_VERSION}"
+        )
+        self.update_label.setToolTip(str(update.installer_path))
+        self.update_banner.show()
+        self._update_actions()
+
+    def _start_update(self) -> None:
+        update = self.available_update
+        if update is None:
+            self._check_for_update()
+            update = self.available_update
+        if update is None:
+            QMessageBox.information(
+                self,
+                "Güncelleme",
+                "Uygulama klasöründe daha yeni bir Setup EXE bulunamadı.",
+            )
+            return
+        answer = QMessageBox.question(
+            self,
+            "Eşleştirici Güncellenecek",
+            f"{update.version} sürümü kurulacak. Uygulama kapanacak ve güncelleme "
+            "tamamlandıktan sonra yeniden açılacak. Devam edilsin mi?",
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self.update_service.launch_update(update)
+        except (OSError, ValueError) as exc:
+            QMessageBox.critical(self, "Güncelleme Başlatılamadı", str(exc))
+            return
+        self.statusBar().showMessage("Güncelleme başlatıldı; uygulama kapatılıyor...")
+        QTimer.singleShot(150, QApplication.instance().quit)
+
     def _operation_failed(self, message: str, details: str) -> None:
         self._set_busy(False)
         self.progress.setValue(0)
@@ -493,6 +560,7 @@ class MainWindow(QMainWindow):
         self.clear_button.setEnabled(not self._busy)
         self.merge_files_button.setEnabled(not self._busy)
         self.data_tools_button.setEnabled(not self._busy)
+        self.update_button.setEnabled(not self._busy and self.available_update is not None)
 
     @staticmethod
     def _path_label(text: str) -> QLabel:
