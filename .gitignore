@@ -9,6 +9,8 @@ build/
 dist/
 dist-portable/
 build-portable/
+dist-installer/
+build-installer/
 dist-macos/
 build-macos/
 release/

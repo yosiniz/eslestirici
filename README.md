@@ -147,7 +147,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 python -m unittest discover -s tests -v
 ```
 
-Testler tek/çok kural, AND/OR, para/plaka/tarih normalizasyonu, boş değerler, bire bir tekrar tüketimi, tüm eşleşmeler, şablonlar, çoklu Excel birleştirme ve biçimlendirilmiş Excel çıktılarını kapsar.
+Testler tek/çok kural, AND/OR, para/plaka/tarih normalizasyonu, boş değerler, bire bir tekrar tüketimi, tüm eşleşmeler, şablonlar, çoklu Excel birleştirme, veri işlemleri ve biçimlendirilmiş Excel çıktılarını kapsar.
 
 ## Windows EXE oluşturma
 
@@ -176,7 +176,25 @@ Tek dosya seçeneği (açılışı daha yavaştır):
 pyinstaller --noconfirm --clean OtoparkPlakaKontrol-OneFile.spec
 ```
 
-Tek dosyalı çıktı `dist\Eslestirici-v2.3-Windows-x64.exe` konumunda oluşur. GitHub Releases için bu EXE doğrudan kullanılabilir; ilk açılışı portable klasör sürümünden daha yavaştır.
+Tek dosyalı çıktı `dist\Eslestirici-v2.3.1-Windows-x64.exe` konumunda oluşur. GitHub Releases için bu EXE doğrudan kullanılabilir; ilk açılışı portable klasör sürümünden daha yavaştır.
+
+### Windows Setup EXE
+
+Kurulum sihirbazı uygulamayı kullanıcı hesabının uygulamalar klasörüne kurar; Başlat menüsü ve isteğe bağlı masaüstü kısayolu oluşturur. Yönetici yetkisi gerektirmez ve Windows'un **Yüklü uygulamalar** ekranından kaldırılabilir.
+
+Önce [Inno Setup 6](https://jrsoftware.org/isinfo.php) kurun, sonra:
+
+```powershell
+.\scripts\build_windows_setup.ps1
+```
+
+Oluşan kurulum dosyası:
+
+```text
+release\Eslestirici-v2.3.1-Setup-Windows-x64.exe
+```
+
+Kurulu sürümün ayarları ve eşleştirme şablonları `%APPDATA%\OtoparkPlakaKontrol` altında saklanır. Güncelleme kurulumu mevcut kullanıcı ayarlarını silmez.
 
 ### Windows portable ZIP
 
@@ -225,9 +243,9 @@ Apple Developer sertifikası verilmezse paket ad-hoc imzalanır. İnternetten in
 Projede `.github/workflows/build-release.yml` iş akışı bulunur. GitHub'a yükledikten sonra:
 
 1. Repository içindeki **Actions** sekmesini açın.
-2. **Portable ve macOS paketleri** iş akışını seçin.
+2. **Windows Setup, Portable ve macOS paketleri** iş akışını seçin.
 3. **Run workflow** düğmesine basın.
-4. Tamamlandığında Windows Portable ZIP, macOS Apple Silicon DMG ve macOS Intel DMG artifact olarak indirilir.
+4. Tamamlandığında Windows Setup EXE, tek dosya EXE, Portable ZIP, macOS Apple Silicon DMG ve macOS Intel DMG artifact olarak indirilir.
 
 Bir GitHub Release oluşturup üç paketi otomatik eklemek için sürüm etiketi gönderin:
 

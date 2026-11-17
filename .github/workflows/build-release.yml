@@ -1,4 +1,4 @@
-name: Portable ve macOS paketleri
+name: Windows Setup, Portable ve macOS paketleri
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   windows-portable:
-    name: Windows x64 Portable
+    name: Windows x64 Setup ve Portable
     runs-on: windows-2025
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +30,13 @@ jobs:
         run: pyinstaller --noconfirm --clean OtoparkPlakaKontrol.spec
       - name: Tek dosya EXE oluştur
         run: pyinstaller --noconfirm --clean --distpath dist-onefile --workpath build-onefile OtoparkPlakaKontrol-OneFile.spec
+      - name: Kurulum uygulamasını oluştur
+        run: pyinstaller --noconfirm --clean --distpath dist-installer --workpath build-installer Eslestirici-Installer.spec
+      - name: Inno Setup kur
+        run: choco install innosetup --no-progress -y
+      - name: Setup EXE oluştur
+        shell: pwsh
+        run: '& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\Eslestirici.iss'
       - name: Portable ZIP oluştur
         shell: pwsh
         run: |
@@ -45,7 +52,12 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: OtoparkPlakaKontrol-Windows-x64-EXE
-          path: dist-onefile/Eslestirici-v2.3-Windows-x64.exe
+          path: dist-onefile/Eslestirici-v2.3.1-Windows-x64.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OtoparkPlakaKontrol-Windows-x64-Setup
+          path: release/Eslestirici-v2.3.1-Setup-Windows-x64.exe
           if-no-files-found: error
 
   macos:
